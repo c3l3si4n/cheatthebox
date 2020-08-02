@@ -137,18 +137,6 @@ def dump_users_to_file():
     with open(FILENAME, 'wb') as f:
         data_to_write = json.dumps({"users": users})
         f.write(data_to_write.encode('utf-8'))
-# point_history = get_point_history(52045)
 
 
-users = []
-
-with open('htb_users.json') as f:
-    users = json.loads(f.read())['users']
-
-for user in users:
-    cheater = calculate_cheater_probability(user['solves'], 300)
-    if cheater['suspicious']:
-        print(f"[*] {user['username']} looks suspicious!")
-        print(json.dumps(
-            [cheater['cases'][0]['points'], cheater['avg_points']]))
-        print(cheater['cases'])
+dump_users_to_file()
