@@ -3,6 +3,7 @@ import config
 import json
 from bs4 import BeautifulSoup
 import datetime
+import dateutil.parser
 
 USERAGENT = config.USERAGENT
 USERNAME = config.USERNAME
@@ -56,9 +57,46 @@ def get_point_history(id):
     return solves_list
 
 
-def calculate_cheater_probability(solves):
+def calculate_cheater_probability(solves, threshold):
+    solves_map = {}
     for solve in solves:
-        print(solve)
+        time = dateutil.parser.parse(solve['date'])
+        formatted_day = time.strftime("%d/%m/%y")
+        if formatted_day not in solves_map:
+            solves_map.update({formatted_day: {"day": formatted_day}})
+        if 'points' not in solves_map[formatted_day]:
+            solves_map[formatted_day]['points'] = 0
+        if 'number_of_solves' not in solves_map[formatted_day]:
+            solves_map[formatted_day]['number_of_solves'] = 0
+        if 'solves' not in solves_map[formatted_day]:
+            solves_map[formatted_day]['solves'] = []
+        solves_map[formatted_day]['number_of_solves'] += 1
+
+        solves_map[formatted_day]['points'] = solves_map[formatted_day]['points'] + solve['points']
+        solve['time'] = time.strftime("%H:%M:%S")
+        del solve['date']
+        solves_map[formatted_day]['solves'].append(solve)
+
+    solves_map_cleaned = []
+    final_obj = {}
+    points_sum = 0
+    counter = 0
+    for key in solves_map:
+        solves_map[key]['solves'] = sorted(
+            solves_map[key]['solves'], key=lambda k: k['time'])
+        if not solves_map[key]['points'] < threshold:
+            points_sum += solves_map[key]['points']
+            counter += 1
+            solves_map_cleaned.append(solves_map[key])
+    if len(solves_map_cleaned) > 0:
+        avg_points = int(points_sum / counter)
+
+        final_obj = {"suspicious": True,
+                     "avg_points": avg_points, "cases": solves_map_cleaned}
+    else:
+        final_obj = {"suspicious": False, "cases": []}
+
+    return final_obj
 
 
 def dump_hof():
@@ -66,6 +104,7 @@ def dump_hof():
     soup = BeautifulSoup(html_text, 'html.parser')
     user_list = []
     for tr in soup.find_all("tr"):
+
         td_list = tr.find_all('td')
 
         if len(td_list) == 11:
@@ -80,14 +119,17 @@ def dump_hof():
             log('Saved profile data for username %s' % username)
             solves = get_point_history(user_id)
             log('Saved challenges and machines solves for username %s' % username)
+            log('Analysing if %s is a cheater.' % username)
+            analysis = calculate_cheater_probability(solves, 400)
 
             user_obj = {"id": user_id, "username": username,
-                        "points": points, "solves": solves}
+                        "points": points, "analysis": analysis, "solves": solves}
             user_list.append(user_obj)
+
     return user_list
 
 
-#login(USERNAME, PASSWORD)
+# login(USERNAME, PASSWORD)
 # users = dump_hof()
 
 
@@ -103,6 +145,10 @@ users = []
 with open('htb_users.json') as f:
     users = json.loads(f.read())['users']
 
-solves = users[0]['solves']
-
-calculate_cheater_probability(solves)
+for user in users:
+    cheater = calculate_cheater_probability(user['solves'], 300)
+    if cheater['suspicious']:
+        print(f"[*] {user['username']} looks suspicious!")
+        print(json.dumps(
+            [cheater['cases'][0]['points'], cheater['avg_points']]))
+        print(cheater['cases'])
