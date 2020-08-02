@@ -42,11 +42,13 @@ def get_point_history(id):
     for p in ps:
         if p.find('span'):
             time = p.text.split('] ')[0][1:]
-            name = p.text.split('] ')[1].split(": ")[0]
+            name = p.text.split('] ')[1].split(": ")
+            name.pop()
+            name = ': '.join(name)
             points = int(p.find('code').text)
 
             time = datetime.datetime.strptime(time, '%d %b %Y %H:%M:%S')
-            time = time.timestamp()
+            time = time.isoformat()
             time = str(time)
 
             solve_name = {"date": time, "name": name, "points": points}

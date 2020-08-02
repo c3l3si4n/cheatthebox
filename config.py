@@ -6,7 +6,7 @@ COUNTRY = 'BR'
 
 USERAGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
 
-USERNAME = 'insidetf2@gmail.com'
-PASSWORD = 'pbmRyJ7%$8VynFhL4LwJ5PQ!wSKea*'
+USERNAME = 'boxnothacked@gmail.com'
+PASSWORD = 'WxqCjEF25AyfSXoev6jJqkMCchzawd'
 
 OUTPUT_FILENAME = "htb_users.json"
