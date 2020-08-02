@@ -54,6 +54,11 @@ def get_point_history(id):
     return solves_list
 
 
+def calculate_cheater_probability(solves):
+    for solve in solves:
+        print(solve)
+
+
 def dump_hof():
     html_text = s.get('https://www.hackthebox.eu/home/hof').text
     soup = BeautifulSoup(html_text, 'html.parser')
@@ -80,10 +85,22 @@ def dump_hof():
     return user_list
 
 
-login(USERNAME, PASSWORD)
-users = dump_hof()
+#login(USERNAME, PASSWORD)
+# users = dump_hof()
 
-with open(FILENAME, 'wb') as f:
-    data_to_write = json.dumps({"users": users})
-    f.write(data_to_write.encode('utf-8'))
+
+def dump_users_to_file():
+    with open(FILENAME, 'wb') as f:
+        data_to_write = json.dumps({"users": users})
+        f.write(data_to_write.encode('utf-8'))
 # point_history = get_point_history(52045)
+
+
+users = []
+
+with open('htb_users.json') as f:
+    users = json.loads(f.read())['users']
+
+solves = users[0]['solves']
+
+calculate_cheater_probability(solves)
